@@ -67,8 +67,8 @@ export default function SubjectsPage() {
               onChange={(e) => setNewSubject(e.target.value)}
               className="flex-1"
             />
-            <Button type="submit" disabled={submitting}>
-              {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : <Plus size={16} className="mr-2" />}
+            <Button type="submit" loading={submitting}>
+              {!submitting && <Plus size={16} className="mr-2" />}
               Add Subject
             </Button>
           </form>

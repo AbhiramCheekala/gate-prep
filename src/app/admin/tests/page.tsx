@@ -297,8 +297,8 @@ export default function TestsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" disabled={submitting} size="lg">
-                  {submitting ? <Loader2 className="animate-spin mr-2" size={20} /> : <CheckCircle size={20} className="mr-2" />}
+                <Button type="submit" loading={submitting} size="lg">
+                  {!submitting && <CheckCircle size={20} className="mr-2" />}
                   Finalize and Create Test
                 </Button>
               </div>
@@ -343,10 +343,9 @@ export default function TestsPage() {
           <Button 
             variant="outline" 
             onClick={() => fetchTests(nextCursor)} 
-            disabled={loadingMore}
+            loading={loadingMore}
             size="lg"
           >
-            {loadingMore ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
             Load More Tests
           </Button>
         </div>

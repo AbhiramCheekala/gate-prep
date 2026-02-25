@@ -92,9 +92,8 @@ export default function AdminQuestionsPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => fetchQuestions(nextCursor)} 
-                    disabled={loadingMore}
+                    loading={loadingMore}
                   >
-                    {loadingMore ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
                     Load More Questions
                   </Button>
                 </div>

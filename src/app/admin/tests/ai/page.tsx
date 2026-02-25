@@ -227,13 +227,10 @@ export default function AIGeneratorPage() {
             <Button 
               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11 transition-all" 
               onClick={handleGenerate} 
-              disabled={generating}
+              loading={generating}
             >
-              {generating ? (
-                <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Generating...</>
-              ) : (
-                <><Sparkles className="mr-2" size={16} /> Generate Questions</>
-              )}
+              {!generating && <Sparkles className="mr-2" size={16} />}
+              {generating ? "Generating..." : "Generate Questions"}
             </Button>
           </CardContent>
         </Card>
@@ -265,8 +262,8 @@ export default function AIGeneratorPage() {
                     />
                   </div>
                 </div>
-                <Button className="w-full bg-green-600 hover:bg-green-700 h-11" onClick={handleSaveTest} disabled={saving}>
-                  {saving ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle className="mr-2" size={18} />}
+                <Button className="w-full bg-green-600 hover:bg-green-700 h-11" onClick={handleSaveTest} loading={saving}>
+                  {!saving && <CheckCircle className="mr-2" size={18} />}
                   Create Test with {generatedQuestions.length} Questions
                 </Button>
               </CardContent>

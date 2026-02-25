@@ -117,8 +117,8 @@ export default function BulkUploadPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={submitting} size="lg">
-                {submitting ? <Loader2 className="animate-spin mr-2" size={20} /> : <Send size={20} className="mr-2" />}
+              <Button type="submit" loading={submitting} size="lg">
+                {!submitting && <Send size={20} className="mr-2" />}
                 Upload Questions
               </Button>
             </div>

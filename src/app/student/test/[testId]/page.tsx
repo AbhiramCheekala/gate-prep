@@ -18,6 +18,7 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
   const [responses, setResponses] = useState<any[]>([]);
   const [currentResponse, setCurrentResponse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const requestFullScreen = () => {
@@ -64,6 +65,7 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
 
   const saveResponse = async (isMarked: boolean = false) => {
     const question = test.questions[currentIdx];
+    setSubmitting(true);
     await fetch(`/api/attempts/${attemptId}/respond`, {
       method: "POST",
       body: JSON.stringify({
@@ -83,6 +85,7 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
     if (currentIdx < test.questions.length - 1) {
       goToQuestion(currentIdx + 1);
     }
+    setSubmitting(false);
   };
 
   const goToQuestion = (idx: number) => {
@@ -100,10 +103,13 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
 
   const submitTest = async () => {
     if (!confirm("Are you sure you want to submit the test?")) return;
+    setSubmitting(true);
     const res = await fetch(`/api/attempts/${attemptId}/submit`, { method: "POST" });
     const data = await res.json();
     if (data.success) {
       router.push(`/student/test/${params.testId}/result?attemptId=${attemptId}`);
+    } else {
+      setSubmitting(false);
     }
   };
 
@@ -134,7 +140,7 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
       <header className="h-14 bg-white border-b flex items-center justify-between px-6 shrink-0">
         <div className="font-bold text-[#003087]">GATE Online Test Series - {test.name}</div>
         <TimerBar durationMins={test.durationMins || 180} onTimeUp={() => {}} />
-        <Button variant="danger" size="sm" onClick={submitTest}>Submit Test</Button>
+        <Button variant="danger" size="sm" onClick={submitTest} loading={submitting}>Submit Test</Button>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
@@ -149,10 +155,10 @@ export default function TestTakingPage({ params }: { params: { testId: string } 
           </div>
           <div className="h-16 border-t bg-gray-50 flex items-center justify-between px-6 shrink-0">
             <div className="space-x-2">
-              <Button variant="purple" onClick={() => saveResponse(true)}>Mark for Review & Next</Button>
-              <Button variant="secondary" onClick={() => setCurrentResponse(null)}>Clear Response</Button>
+              <Button variant="purple" onClick={() => saveResponse(true)} loading={submitting}>Mark for Review & Next</Button>
+              <Button variant="secondary" onClick={() => setCurrentResponse(null)} disabled={submitting}>Clear Response</Button>
             </div>
-            <Button onClick={() => saveResponse(false)}>Save & Next</Button>
+            <Button onClick={() => saveResponse(false)} loading={submitting}>Save & Next</Button>
           </div>
         </div>
 

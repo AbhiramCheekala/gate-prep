@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function StudentDashboard() {
   const [tests, setTests] = useState([]);
+  const [startingTestId, setStartingTestId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -19,13 +20,18 @@ export default function StudentDashboard() {
   }, []);
 
   const startTest = async (testId: string) => {
-    const res = await fetch("/api/attempts", {
-      method: "POST",
-      body: JSON.stringify({ testId }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      router.push(`/student/test/${testId}?attemptId=${data.data.attemptId}`);
+    setStartingTestId(testId);
+    try {
+      const res = await fetch("/api/attempts", {
+        method: "POST",
+        body: JSON.stringify({ testId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push(`/student/test/${testId}?attemptId=${data.data.attemptId}`);
+      }
+    } finally {
+      setStartingTestId(null);
     }
   };
 
@@ -82,7 +88,11 @@ export default function StudentDashboard() {
               <div className="text-sm text-gray-600 mb-4">
                 Duration: {test.durationMins} mins
               </div>
-              <Button className="w-full" onClick={() => startTest(test.id)}>
+              <Button 
+                className="w-full" 
+                onClick={() => startTest(test.id)}
+                loading={startingTestId === test.id}
+              >
                 Start Test
               </Button>
             </CardContent>
