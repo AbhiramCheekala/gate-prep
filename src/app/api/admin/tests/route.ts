@@ -95,7 +95,14 @@ export async function POST(req: Request) {
           if (q.type === "MCQ") {
             await tx.insert(mcqQuestions).values({ id: qId, subjectId, ...q });
           } else if (q.type === "NAT") {
-            await tx.insert(natQuestions).values({ id: qId, subjectId, ...q });
+            const { correctAnsMin, correctAnsMax, ...rest } = q;
+            await tx.insert(natQuestions).values({ 
+              id: qId, 
+              subjectId, 
+              correctAnsMin, 
+              correctAnsMax: correctAnsMax ?? correctAnsMin,
+              ...rest 
+            });
           } else if (q.type === "MSQ") {
             await tx.insert(msqQuestions).values({ id: qId, subjectId, ...q });
           }

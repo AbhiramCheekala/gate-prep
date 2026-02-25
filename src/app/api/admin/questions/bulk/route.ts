@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             subjectId,
             question: q.question,
             correctAnsMin: q.correctAnsMin,
-            correctAnsMax: q.correctAnsMax,
+            correctAnsMax: q.correctAnsMax ?? q.correctAnsMin,
             marks: q.marks,
             explanation: q.explanation,
           });

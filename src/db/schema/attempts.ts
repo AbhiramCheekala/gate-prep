@@ -20,7 +20,7 @@ export const studentResponses = mysqlTable("student_responses", {
   testQuestionId: varchar("test_question_id", { length: 36 }).references(() => testQuestions.id),
   questionType: mysqlEnum("question_type", ["MCQ", "NAT", "MSQ"]).notNull(),
   mcqResponse: mysqlEnum("mcq_response", ["option1", "option2", "option3", "option4"]),
-  natResponse: decimal("nat_response", { precision: 12, scale: 4 }),
+  natResponse: decimal("nat_response", { precision: 18, scale: 4 }),
   msqResponse: json("msq_response"), // string[]
   isCorrect: boolean("is_correct"),
   isMarkedForReview: boolean("is_marked_for_review").default(false),

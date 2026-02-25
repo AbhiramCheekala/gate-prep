@@ -23,10 +23,20 @@ export async function POST(req: NextRequest) {
 
   try {
     for (const q of questions) {
-      const { type, ...data } = q;
-      if (type === "MCQ") await db.insert(mcqQuestions).values(data as any);
-      else if (type === "NAT") await db.insert(natQuestions).values(data as any);
-      else if (type === "MSQ") await db.insert(msqQuestions).values(data as any);
+      if (q.type === "MCQ") {
+        const { type, ...data } = q;
+        await db.insert(mcqQuestions).values(data as any);
+      } else if (q.type === "NAT") {
+        const { type, ...data } = q;
+        const payload = {
+          ...data,
+          correctAnsMax: q.correctAnsMax ?? q.correctAnsMin
+        };
+        await db.insert(natQuestions).values(payload as any);
+      } else if (q.type === "MSQ") {
+        const { type, ...data } = q;
+        await db.insert(msqQuestions).values(data as any);
+      }
       successCount++;
     }
     return NextResponse.json({ success: true, count: successCount });

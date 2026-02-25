@@ -47,7 +47,13 @@ export async function POST(req: NextRequest) {
   const { type, ...data } = await req.json();
   try {
     if (type === "MCQ") await db.insert(mcqQuestions).values(data);
-    else if (type === "NAT") await db.insert(natQuestions).values(data);
+    else if (type === "NAT") {
+      const payload = {
+        ...data,
+        correctAnsMax: data.correctAnsMax ?? data.correctAnsMin
+      };
+      await db.insert(natQuestions).values(payload);
+    }
     else if (type === "MSQ") await db.insert(msqQuestions).values(data);
     else throw new Error("Invalid question type");
 

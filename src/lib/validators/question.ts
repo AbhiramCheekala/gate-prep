@@ -16,7 +16,7 @@ export const natValidator = z.object({
   subjectId: z.string().uuid(),
   question: z.string().min(1),
   correctAnsMin: z.number(),
-  correctAnsMax: z.number(),
+  correctAnsMax: z.number().optional(),
   marks: z.number().int().min(1).max(2),
   explanation: z.string().optional(),
 });

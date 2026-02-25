@@ -33,11 +33,11 @@ async function seed() {
 
   await db.insert(natQuestions).values({
     subjectId,
-    question: "What is the result of 2^10?",
-    correctAnsMin: "1024.0000",
-    correctAnsMax: "1024.0000",
+    question: "What is 2 raised to the power of 29?",
+    correctAnsMin: "536870912",
+    correctAnsMax: "536870912",
     marks: 1,
-    explanation: "2 raised to the power of 10 is 1024."
+    explanation: "2 raised to the power of 29 is 536870912."
   });
 
   await db.insert(msqQuestions).values({

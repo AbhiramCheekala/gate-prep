@@ -3,16 +3,20 @@ import { studentResponses, testAttempts, testQuestions, mcqQuestions, natQuestio
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { sessionOptions, SessionData } from "@/lib/session";
-import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { NextResponse, NextRequest } from "next/server";
+import { eq, and, gt } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getIronSession<SessionData>(cookies(), sessionOptions);
   if (!session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get all incorrect responses for this student
+  const { searchParams } = new URL(req.url);
+  const cursor = searchParams.get("cursor");
+  const limit = 10;
+
+  // Get incorrect responses for this student with cursor-based pagination
   const responses = await db
     .select({
       id: studentResponses.id,
@@ -30,13 +34,19 @@ export async function GET() {
     .where(
       and(
         eq(testAttempts.studentId, session.userId),
-        eq(studentResponses.isCorrect, false)
+        eq(studentResponses.isCorrect, false),
+        cursor ? gt(studentResponses.id, cursor) : undefined
       )
-    );
+    )
+    .limit(limit + 1);
+
+  const hasMore = responses.length > limit;
+  const items = hasMore ? responses.slice(0, limit) : responses;
+  const nextCursor = hasMore ? items[items.length - 1].id : null;
 
   // Fetch question details for each response
   const mistakes = await Promise.all(
-    responses.map(async (res) => {
+    items.map(async (res) => {
       let questionData = null;
       if (res.questionType === "MCQ") {
         questionData = await db.query.mcqQuestions.findFirst({
@@ -59,5 +69,8 @@ export async function GET() {
     })
   );
 
-  return NextResponse.json(mistakes);
+  return NextResponse.json({
+    items: mistakes,
+    nextCursor,
+  });
 }
