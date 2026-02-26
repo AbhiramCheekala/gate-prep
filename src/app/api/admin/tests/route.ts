@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { tests, testQuestions, mcqQuestions, msqQuestions, natQuestions } from "@/db/schema";
+import { tests, testQuestions, mcqQuestions, msqQuestions, natQuestions, subjects } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
