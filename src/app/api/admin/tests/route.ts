@@ -53,9 +53,23 @@ export async function POST(req: Request) {
     }
 
     let finalQuestions: { id: string, type: string }[] = [];
+    let targetSubjectId = subjectId;
 
-    if (selectionMode === "ai" && generatedQuestions && subjectId) {
-      // Questions will be inserted within the transaction
+    if (selectionMode === "ai" && generatedQuestions) {
+      // If no subjectId is provided (e.g., Full Mock), find the first available subject
+      if (!targetSubjectId) {
+        const firstSubject = await db.query.subjects.findFirst();
+        if (firstSubject) {
+          targetSubjectId = firstSubject.id;
+        } else {
+          // Create a default subject if none exists
+          targetSubjectId = crypto.randomUUID();
+          await db.insert(subjects).values({
+            id: targetSubjectId,
+            name: "General / Computer Science",
+          });
+        }
+      }
     } else if (selectionMode === "random") {
       const { mcq = 0, msq = 0, nat = 0 } = randomCounts || {};
       
@@ -79,10 +93,19 @@ export async function POST(req: Request) {
     
     // Start transaction
     await db.transaction(async (tx) => {
+      let finalName = name;
+      
+      // Auto-increment name for mock tests
+      if (type === "mock") {
+        const existingMockTests = await tx.select().from(tests).where(eq(tests.type, "mock"));
+        const nextNumber = existingMockTests.length + 1;
+        finalName = `Mock Test - ${nextNumber.toString().padStart(2, '0')}`;
+      }
+
       const testId = crypto.randomUUID();
       await tx.insert(tests).values({
         id: testId,
-        name,
+        name: finalName,
         type,
         durationMins: parseInt(durationMins),
         createdBy: session.userId,
@@ -92,19 +115,40 @@ export async function POST(req: Request) {
       if (selectionMode === "ai" && generatedQuestions) {
         for (const [index, q] of generatedQuestions.entries()) {
           const qId = crypto.randomUUID();
+          const questionData = {
+            id: qId,
+            subjectId: targetSubjectId,
+            question: q.question,
+            code: q.code,
+            marks: q.marks,
+            explanation: q.explanation,
+          };
+
           if (q.type === "MCQ") {
-            await tx.insert(mcqQuestions).values({ id: qId, subjectId, ...q });
+            await tx.insert(mcqQuestions).values({
+              ...questionData,
+              option1: q.option1,
+              option2: q.option2,
+              option3: q.option3,
+              option4: q.option4,
+              correctAns: q.correctAns,
+              negativeMarks: q.negativeMarks?.toString() || (q.marks === 1 ? "-0.33" : "-0.66"),
+            });
           } else if (q.type === "NAT") {
-            const { correctAnsMin, correctAnsMax, ...rest } = q;
             await tx.insert(natQuestions).values({ 
-              id: qId, 
-              subjectId, 
-              correctAnsMin, 
-              correctAnsMax: correctAnsMax ?? correctAnsMin,
-              ...rest 
+              ...questionData,
+              correctAnsMin: q.correctAnsMin.toString(), 
+              correctAnsMax: (q.correctAnsMax ?? q.correctAnsMin).toString(),
             });
           } else if (q.type === "MSQ") {
-            await tx.insert(msqQuestions).values({ id: qId, subjectId, ...q });
+            await tx.insert(msqQuestions).values({ 
+              ...questionData,
+              option1: q.option1,
+              option2: q.option2,
+              option3: q.option3,
+              option4: q.option4,
+              correctAnswers: q.correctAnswers,
+            });
           }
           
           await tx.insert(testQuestions).values({

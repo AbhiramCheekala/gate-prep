@@ -15,13 +15,33 @@ export function QuestionPanel({ question, response, onResponseChange }: Question
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-gray-50 p-3 border-b">
-        <span className="font-bold">Question Type: {question.type}</span>
+        <div className="flex gap-4 items-center">
+          <span className="font-bold">Type: {question.type}</span>
+          {question.negativeMarks && Number(question.negativeMarks) !== 0 && (
+            <span className="text-red-600 text-sm font-semibold">
+              Negative Marks: {question.negativeMarks}
+            </span>
+          )}
+          {(!question.negativeMarks || Number(question.negativeMarks) === 0) && (
+            <span className="text-green-600 text-sm font-semibold">
+              No Negative Marks
+            </span>
+          )}
+        </div>
         <span className="bg-[#003087] text-white px-3 py-1 rounded text-sm">{question.marks} Mark(s)</span>
       </div>
       
-      <div className="text-lg font-medium text-gray-800 px-4">
+      <div className="text-lg font-medium text-gray-800 px-4 whitespace-pre-wrap">
         {question.question}
       </div>
+
+      {question.code && (
+        <div className="px-4">
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto font-mono text-sm leading-relaxed">
+            <code>{question.code}</code>
+          </pre>
+        </div>
+      )}
 
       <div className="px-4 space-y-3">
         {question.type === 'MCQ' && (

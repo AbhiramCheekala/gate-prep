@@ -48,7 +48,13 @@ export async function POST(req: NextRequest, { params }: { params: { attemptId: 
       else if (tq.questionType === "NAT") correctAns = { min: question.correctAnsMin, max: question.correctAnsMax };
       else if (tq.questionType === "MSQ") correctAns = question.correctAnswers;
 
-      const score = computeScore(tq.questionType as any, question.marks, correctAns, studentAns);
+      const score = computeScore(
+        tq.questionType as any, 
+        question.marks, 
+        correctAns, 
+        studentAns, 
+        question.negativeMarks ? parseFloat(question.negativeMarks.toString()) : 0
+      );
       totalScore += score;
 
       if (response) {

@@ -47,14 +47,19 @@ export default function AIGeneratorPage() {
       });
   }, []);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (isFullMock = false) => {
     setError(null);
-    if (!aiConfig.apiKey || !aiConfig.subjectId) {
-      setError("Please provide Gemini API Key and select a Subject.");
+    if (!aiConfig.apiKey) {
+      setError("Please provide Gemini API Key.");
       return;
     }
 
-    const subject = subjects.find(s => s.id === aiConfig.subjectId);
+    if (!isFullMock && !aiConfig.subjectId) {
+      setError("Please select a Subject.");
+      return;
+    }
+
+    const subject = isFullMock ? { name: "Full Syllabus" } : subjects.find(s => s.id === aiConfig.subjectId);
     setGenerating(true);
     
     try {
@@ -64,17 +69,24 @@ export default function AIGeneratorPage() {
         body: JSON.stringify({
           apiKey: aiConfig.apiKey,
           subjectName: subject.name,
-          count: aiConfig.count,
-          customPrompt: aiConfig.prompt,
+          count: isFullMock ? 65 : aiConfig.count,
+          customPrompt: isFullMock ? "Comprehensive GATE CSIT Mock Test covering all subjects." : aiConfig.prompt,
           type: aiConfig.type,
-          model: aiConfig.model
+          model: aiConfig.model,
+          fullMock: isFullMock
         })
       });
 
       const data = await res.json();
       if (res.ok) {
-        // AI returns an array of questions now
         setGeneratedQuestions(prev => [...prev, ...data]);
+        if (isFullMock) {
+          setTestInfo({
+            name: "Mock Test", // Will be auto-incremented on server
+            type: "mock",
+            durationMins: "180"
+          });
+        }
       } else {
         setError(data.error || "Generation failed. Please check your API key.");
       }
@@ -154,86 +166,129 @@ export default function AIGeneratorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Configuration Panel */}
-        <Card className="lg:col-span-1 h-fit sticky top-6 shadow-md border-purple-100">
-          <CardHeader className="bg-purple-50/50 border-b">
-            <CardTitle className="text-lg flex items-center">
-              <Sparkles className="mr-2 text-purple-500" size={18} />
-              AI Configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-500 flex justify-between">
-                Gemini API Key 
-                <Link href="https://aistudio.google.com/app/apikey" target="_blank" className="text-purple-600 normal-case font-normal hover:underline text-[10px]">Get Key</Link>
-              </label>
-              <Input 
-                type="password" 
-                placeholder="Paste your key here" 
-                value={aiConfig.apiKey}
-                className="focus:ring-purple-500 focus:border-purple-500"
-                onChange={(e) => setAiConfig({...aiConfig, apiKey: e.target.value})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-500">Gemini Model (Free Tier)</label>
-              <select
-                className="w-full h-10 px-3 py-2 bg-white border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                value={aiConfig.model}
-                onChange={(e) => setAiConfig({...aiConfig, model: e.target.value})}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="shadow-md border-purple-100">
+            <CardHeader className="bg-purple-50/50 border-b">
+              <CardTitle className="text-lg flex items-center">
+                <Sparkles className="mr-2 text-purple-500" size={18} />
+                One-Click Mock Test
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <Button 
+                className="w-full bg-[#003087] hover:bg-[#002060] text-white font-bold h-16 text-lg transition-all shadow-lg" 
+                onClick={() => handleGenerate(true)} 
+                disabled={generating || !aiConfig.apiKey}
+                loading={generating}
               >
-                <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Recommended)</option>
-                <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (More Detailed)</option>
-                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Fastest)</option>
-              </select>
-            </div>
+                {!generating && <Sparkles className="mr-2" size={20} />}
+                {generating ? "Generating 65 Questions..." : "Mock Test Gate CSIT"}
+              </Button>
+              <p className="text-[10px] text-gray-500 mt-2 text-center">
+                Generates a full 65-question mock test following the latest GATE pattern.
+              </p>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-500">Subject</label>
-              <select
-                className="w-full h-10 px-3 py-2 bg-white border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                value={aiConfig.subjectId}
-                onChange={(e) => setAiConfig({...aiConfig, subjectId: e.target.value})}
+          <Card className="shadow-md border-purple-100 sticky top-6">
+            <CardHeader className="bg-purple-50/50 border-b">
+              <CardTitle className="text-lg flex items-center">
+                <Sparkles className="mr-2 text-purple-500" size={18} />
+                Custom AI Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5 pt-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500 flex justify-between">
+                  Gemini API Key 
+                  <Link href="https://aistudio.google.com/app/apikey" target="_blank" className="text-purple-600 normal-case font-normal hover:underline text-[10px]">Get Key</Link>
+                </label>
+                <Input 
+                  type="password" 
+                  placeholder="Paste your key here" 
+                  value={aiConfig.apiKey}
+                  className="focus:ring-purple-500 focus:border-purple-500"
+                  onChange={(e) => setAiConfig({...aiConfig, apiKey: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500">Gemini Model (Free Tier)</label>
+                <select
+                  className="w-full h-10 px-3 py-2 bg-white border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                  value={aiConfig.model}
+                  onChange={(e) => setAiConfig({...aiConfig, model: e.target.value})}
+                >
+                  <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Recommended)</option>
+                  <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (More Detailed)</option>
+                  <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Fastest)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500">Subject</label>
+                <select
+                  className="w-full h-10 px-3 py-2 bg-white border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                  value={aiConfig.subjectId}
+                  onChange={(e) => setAiConfig({...aiConfig, subjectId: e.target.value})}
+                >
+                  <option value="">Select Subject</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500">Questions to Generate</label>
+                <Input 
+                  type="number" 
+                  value={aiConfig.count}
+                  min={1}
+                  max={65}
+                  className="focus:ring-purple-500"
+                  onChange={(e) => setAiConfig({...aiConfig, count: Math.min(65, Math.max(1, parseInt(e.target.value) || 1))})}
+                />
+                <div className="flex gap-2 mt-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-[10px] h-6 px-2"
+                    onClick={() => setAiConfig({...aiConfig, count: 65, prompt: "Full GATE CSIT Mock Test pattern: 10 GA questions + 55 CSIT questions. Include MCQ, MSQ, and NAT. Hard level."})}
+                  >
+                    65 (Mock Test)
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-[10px] h-6 px-2"
+                    onClick={() => setAiConfig({...aiConfig, count: 10})}
+                  >
+                    10
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500">Rules & Level</label>
+                <textarea 
+                  className="w-full p-3 border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                  rows={3}
+                  placeholder="Ex: Hard, focus on data structures, include Python code snippets..."
+                  value={aiConfig.prompt}
+                  onChange={(e) => setAiConfig({...aiConfig, prompt: e.target.value})}
+                />
+              </div>
+
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11 transition-all" 
+                onClick={() => handleGenerate(false)} 
+                loading={generating}
               >
-                <option value="">Select Subject</option>
-                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-500">Questions to Generate</label>
-              <Input 
-                type="number" 
-                value={aiConfig.count}
-                min={1}
-                max={20}
-                className="focus:ring-purple-500"
-                onChange={(e) => setAiConfig({...aiConfig, count: Math.min(20, Math.max(1, parseInt(e.target.value) || 1))})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-500">Rules & Level</label>
-              <textarea 
-                className="w-full p-3 border rounded-md text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                rows={3}
-                placeholder="Ex: Hard, focus on data structures, include Python code snippets..."
-                value={aiConfig.prompt}
-                onChange={(e) => setAiConfig({...aiConfig, prompt: e.target.value})}
-              />
-            </div>
-
-            <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11 transition-all" 
-              onClick={handleGenerate} 
-              loading={generating}
-            >
-              {!generating && <Sparkles className="mr-2" size={16} />}
-              {generating ? "Generating..." : "Generate Questions"}
-            </Button>
-          </CardContent>
-        </Card>
+                {!generating && <Sparkles className="mr-2" size={16} />}
+                {generating ? "Generating..." : "Generate Custom Questions"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Preview Panel */}
         <div className="lg:col-span-2 space-y-6">
@@ -288,6 +343,12 @@ export default function AIGeneratorPage() {
                 <CardContent className="space-y-4">
                   <p className="font-medium text-gray-800 text-sm leading-relaxed">{q.question}</p>
                   
+                  {q.code && (
+                    <pre className="bg-gray-900 text-gray-100 p-3 rounded text-[10px] font-mono overflow-x-auto whitespace-pre">
+                      <code>{q.code}</code>
+                    </pre>
+                  )}
+
                   {q.type === 'MCQ' || q.type === 'MSQ' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {['option1', 'option2', 'option3', 'option4'].map((optKey) => {

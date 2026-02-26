@@ -25,6 +25,7 @@ export async function POST(req: Request) {
           await tx.insert(mcqQuestions).values({
             subjectId,
             question: q.question,
+            code: q.code,
             option1: q.option1,
             option2: q.option2,
             option3: q.option3,
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
           await tx.insert(natQuestions).values({
             subjectId,
             question: q.question,
+            code: q.code,
             correctAnsMin: q.correctAnsMin,
             correctAnsMax: q.correctAnsMax ?? q.correctAnsMin,
             marks: q.marks,
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
           await tx.insert(msqQuestions).values({
             subjectId,
             question: q.question,
+            code: q.code,
             option1: q.option1,
             option2: q.option2,
             option3: q.option3,

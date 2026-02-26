@@ -4,7 +4,8 @@ export function computeScore(
   questionType: QuestionType,
   marks: number,
   correctAnswer: any,
-  studentResponse: any
+  studentResponse: any,
+  negativeMarks: number = 0
 ): number {
   if (studentResponse === undefined || studentResponse === null || (Array.isArray(studentResponse) && studentResponse.length === 0)) {
     return 0;
@@ -15,7 +16,7 @@ export function computeScore(
       if (studentResponse === correctAnswer) {
         return marks;
       } else {
-        return marks === 1 ? -0.33 : -0.67;
+        return -Math.abs(negativeMarks);
       }
     }
     case "NAT": {

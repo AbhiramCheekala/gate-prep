@@ -3,18 +3,21 @@ import { z } from "zod";
 export const mcqValidator = z.object({
   subjectId: z.string().uuid(),
   question: z.string().min(1),
+  code: z.string().optional(),
   option1: z.string().min(1),
   option2: z.string().min(1),
   option3: z.string().min(1),
   option4: z.string().min(1),
   correctAns: z.enum(["option1", "option2", "option3", "option4"]),
   marks: z.number().int().min(1).max(2),
+  negativeMarks: z.union([z.string(), z.number()]).optional(),
   explanation: z.string().optional(),
 });
 
 export const natValidator = z.object({
   subjectId: z.string().uuid(),
   question: z.string().min(1),
+  code: z.string().optional(),
   correctAnsMin: z.number(),
   correctAnsMax: z.number().optional(),
   marks: z.number().int().min(1).max(2),
@@ -24,6 +27,7 @@ export const natValidator = z.object({
 export const msqValidator = z.object({
   subjectId: z.string().uuid(),
   question: z.string().min(1),
+  code: z.string().optional(),
   option1: z.string().min(1),
   option2: z.string().min(1),
   option3: z.string().min(1),
